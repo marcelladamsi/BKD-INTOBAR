@@ -2348,7 +2348,95 @@
   <title>INTOBAR</title>
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
   <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
-  <script src="/_sdk/element_sdk.js"></script>
+  <script>
+    // Mock SDK for localStorage-based data persistence
+    window.elementSdk = {
+      config: {
+        main_title: "INTOBAR",
+        subtitle_text: "Learn Kadazandusun vocabulary through flashcards & spelling",
+        study_title: "Study Guide",
+        background_color: "#f3e8ff",
+        surface_color: "#ede9fe",
+        text_color: "#1a1a1a",
+        accent_color: "#a855f7",
+        secondary_color: "#9333ea",
+        font_family: "Bricolage Grotesque",
+        font_size: 16
+      },
+      init: function(config) {
+        console.log("Mock elementSdk initialized");
+        return { isOk: true };
+      },
+      setConfig: function(config) {
+        Object.assign(window.elementSdk.config, config);
+        console.log("Config updated:", config);
+      }
+    };
+
+    window.dataSdk = {
+      _data: JSON.parse(localStorage.getItem('intobar_data') || '[]'),
+      _listeners: [],
+
+      init: function(handler) {
+        this._handler = handler;
+        console.log("Mock dataSdk initialized");
+        // Load existing data
+        this._notifyListeners();
+        return { isOk: true };
+      },
+
+      create: function(item) {
+        return new Promise((resolve) => {
+          setTimeout(() => {
+            try {
+              // Add unique ID
+              item.__backendId = 'local_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+              item.created_at = new Date().toISOString();
+
+              this._data.push(item);
+              this._save();
+              this._notifyListeners();
+
+              resolve({ isOk: true, data: item });
+            } catch (error) {
+              console.error("Create error:", error);
+              resolve({ isOk: false, error: { message: error.message } });
+            }
+          }, 100); // Simulate network delay
+        });
+      },
+
+      delete: function(item) {
+        return new Promise((resolve) => {
+          setTimeout(() => {
+            try {
+              const index = this._data.findIndex(d => d.__backendId === item.__backendId);
+              if (index > -1) {
+                this._data.splice(index, 1);
+                this._save();
+                this._notifyListeners();
+                resolve({ isOk: true });
+              } else {
+                resolve({ isOk: false, error: { message: "Item not found" } });
+              }
+            } catch (error) {
+              resolve({ isOk: false, error: { message: error.message } });
+            }
+          }, 100);
+        });
+      },
+
+      _save: function() {
+        localStorage.setItem('intobar_data', JSON.stringify(this._data));
+      },
+
+      _notifyListeners: function() {
+        if (this._handler && this._handler.onDataChanged) {
+          this._handler.onDataChanged(this._data);
+        }
+      }
+    };
+  </script>
   <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;600;700;800&amp;family=DM+Sans:wght@400;500;600&amp;display=swap" rel="stylesheet">
   <style>
     * { box-sizing: border-box; }
@@ -2370,7 +2458,6 @@
     .progress-dot { width: 10px; height: 10px; border-radius: 50%; transition: all 0.3s ease; }
     .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); padding: 12px 24px; border-radius: 12px; font-weight: 600; z-index: 100; animation: slideUp 0.3s ease-out; }
   </style>
-  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
   <style>body { box-sizing: border-box; }</style>
  </head>
  <body class="h-full font-body">
@@ -2381,7 +2468,7 @@
     <div class="mt-3 inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-600" style="background: #e8f4f8; border: 1px solid #b3dce8; color: #0066aa;"><i data-lucide="users" style="width:14px;height:14px;"></i> <span id="visitorCount">0</span> learners today
     </div>
    </header><!-- Tabs -->
-   <nav class="flex justify-center gap-1 px-4 mt-2 mb-6 flex-wrap" role="tablist"><button onclick="switchTab('flashcard')" id="tabFlashcard" class="tab-btn tab-active px-6 py-3 text-sm font-600 rounded-t-xl transition-all" style="color: #1a1a1a; border-color: #ff6b6b;" role="tab" aria-selected="true"> <i data-lucide="layers" style="width:16px;height:16px;display:inline-block;vertical-align:middle;margin-right:6px;"></i>Flashcards </button> <button onclick="switchTab('spelling')" id="tabSpelling" class="tab-btn px-6 py-3 text-sm font-600 rounded-t-xl transition-all" style="color: #666666;" role="tab" aria-selected="false"> <i data-lucide="pen-tool" style="width:16px;height:16px;display:inline-block;vertical-align:middle;margin-right:6px;"></i>Spelling </button> <button onclick="switchTab('pronunciation')" id="tabPronunciation" class="tab-btn px-6 py-3 text-sm font-600 rounded-t-xl transition-all" style="color: #666666;" role="tab" aria-selected="false"> <i data-lucide="mic" style="width:16px;height:16px;display:inline-block;vertical-align:middle;margin-right:6px;"></i>Pronunciation </button> <button onclick="switchTab('manage')" id="tabManage" class="tab-btn px-6 py-3 text-sm font-600 rounded-t-xl transition-all" style="color: #666666;" role="tab" aria-selected="false"> <i data-lucide="edit" style="width:16px;height:16px;display:inline-block;vertical-align:middle;margin-right:6px;"></i>Manage Cards </button> <button onclick="switchTab('gameroom')" id="tabGameroom" class="tab-btn px-6 py-3 text-sm font-600 rounded-t-xl transition-all" style="color: #666666;" role="tab" aria-selected="false"> <i data-lucide="users" style="width:16px;height:16px;display:inline-block;vertical-align:middle;margin-right:6px;"></i>Game Room </button> <button onclick="switchTab('leaderboard')" id="tabLeaderboard" class="tab-btn px-6 py-3 text-sm font-600 rounded-t-xl transition-all" style="color: #666666;" role="tab" aria-selected="false"> <i data-lucide="trophy" style="width:16px;height:16px;display:inline-block;vertical-align:middle;margin-right:6px;"></i>Leaderboard </button> <button onclick="switchTab('competition')" id="tabCompetition" class="tab-btn px-6 py-3 text-sm font-600 rounded-t-xl transition-all" style="color: #666666;" role="tab" aria-selected="false"> <i data-lucide="gamepad2" style="width:16px;height:16px;display:inline-block;vertical-align:middle;margin-right:6px;"></i>Competition </button> <button onclick="switchTab('announcements')" id="tabAnnouncements" class="tab-btn px-6 py-3 text-sm font-600 rounded-t-xl transition-all" style="color: #666666;" role="tab" aria-selected="false"> <i data-lucide="megaphone" style="width:16px;height:16px;display:inline-block;vertical-align:middle;margin-right:6px;"></i>Announcements </button> <button onclick="switchTab('study')" id="tabStudy" class="tab-btn px-6 py-3 text-sm font-600 rounded-t-xl transition-all" style="color: #666666;" role="tab" aria-selected="false"> <i data-lucide="book-open" style="width:16px;height:16px;display:inline-block;vertical-align:middle;margin-right:6px;"></i>Study Guide </button>
+   <nav class="flex justify-center gap-1 px-4 mt-2 mb-6 flex-wrap" role="tablist"><button onclick="switchTab('flashcard')" id="tabFlashcard" class="tab-btn tab-active px-6 py-3 text-sm font-600 rounded-t-xl transition-all" style="color: #1a1a1a; border-color: #ff6b6b;" role="tab" aria-selected="true"> <i data-lucide="layers" style="width:16px;height:16px;display:inline-block;vertical-align:middle;margin-right:6px;"></i>Flashcards </button> <button onclick="switchTab('spelling')" id="tabSpelling" class="tab-btn px-6 py-3 text-sm font-600 rounded-t-xl transition-all" style="color: #666666;" role="tab" aria-selected="false"> <i data-lucide="pen-tool" style="width:16px;height:16px;display:inline-block;vertical-align:middle;margin-right:6px;"></i>Spelling </button> <button onclick="switchTab('pronunciation')" id="tabPronunciation" class="tab-btn px-6 py-3 text-sm font-600 rounded-t-xl transition-all" style="color: #666666;" role="tab" aria-selected="false"> <i data-lucide="mic" style="width:16px;height:16px;display:inline-block;vertical-align:middle;margin-right:6px;"></i>Pronunciation </button> <button onclick="switchTab('manage')" id="tabManage" class="tab-btn px-6 py-3 text-sm font-600 rounded-t-xl transition-all" style="color: #666666;" role="tab" aria-selected="false"> <i data-lucide="settings" style="width:16px;height:16px;display:inline-block;vertical-align:middle;margin-right:6px;"></i>Manage Cards </button> <button onclick="switchTab('gameroom')" id="tabGameroom" class="tab-btn px-6 py-3 text-sm font-600 rounded-t-xl transition-all" style="color: #666666;" role="tab" aria-selected="false"> <i data-lucide="users" style="width:16px;height:16px;display:inline-block;vertical-align:middle;margin-right:6px;"></i>Game Room </button> <button onclick="switchTab('leaderboard')" id="tabLeaderboard" class="tab-btn px-6 py-3 text-sm font-600 rounded-t-xl transition-all" style="color: #666666;" role="tab" aria-selected="false"> <i data-lucide="trophy" style="width:16px;height:16px;display:inline-block;vertical-align:middle;margin-right:6px;"></i>Leaderboard </button> <button onclick="switchTab('competition')" id="tabCompetition" class="tab-btn px-6 py-3 text-sm font-600 rounded-t-xl transition-all" style="color: #666666;" role="tab" aria-selected="false"> <i data-lucide="gamepad2" style="width:16px;height:16px;display:inline-block;vertical-align:middle;margin-right:6px;"></i>Competition </button> <button onclick="switchTab('announcements')" id="tabAnnouncements" class="tab-btn px-6 py-3 text-sm font-600 rounded-t-xl transition-all" style="color: #666666;" role="tab" aria-selected="false"> <i data-lucide="megaphone" style="width:16px;height:16px;display:inline-block;vertical-align:middle;margin-right:6px;"></i>Announcements </button> <button onclick="switchTab('study')" id="tabStudy" class="tab-btn px-6 py-3 text-sm font-600 rounded-t-xl transition-all" style="color: #666666;" role="tab" aria-selected="false"> <i data-lucide="book-open" style="width:16px;height:16px;display:inline-block;vertical-align:middle;margin-right:6px;"></i>Study Guide </button>
    </nav><!-- Difficulty & Category Filter -->
    <div class="flex justify-center gap-2 px-4 mb-3 flex-wrap" id="difficultyFilter"></div><!-- Category Filter -->
    <div class="flex justify-center gap-2 px-4 mb-6 flex-wrap" id="categoryFilter"></div><!-- FLASHCARD VIEW -->
@@ -2507,6 +2594,7 @@
        <h2 class="font-heading text-xl font-700 mb-4" style="color: #f0e6d3;">Add New Flashcard</h2>
        <div class="space-y-3"><input id="newCardKadazandusun" type="text" placeholder="Kadazandusun word..." class="spelling-input w-full px-3 py-2 rounded-lg text-sm" style="background: #0f1a2e; color: #f0e6d3; border: 2px solid #2a4a6e;"> <input id="newCardEnglish" type="text" placeholder="English translation..." class="spelling-input w-full px-3 py-2 rounded-lg text-sm" style="background: #0f1a2e; color: #f0e6d3; border: 2px solid #2a4a6e;"> <input id="newCardMalay" type="text" placeholder="Malay translation..." class="spelling-input w-full px-3 py-2 rounded-lg text-sm" style="background: #0f1a2e; color: #f0e6d3; border: 2px solid #2a4a6e;">
         <div class="rounded-lg p-3" style="background: #0f1a2e; border: 2px solid #2a4a6e;"><label for="newCardEmoji" class="text-xs font-600 block mb-2" style="color: #7b9fcc;">Card Emoji</label> <input id="newCardEmoji" type="text" placeholder="🌺" class="spelling-input w-full px-2 py-1 rounded text-center text-2xl mb-3" style="background: #1a2d4a; color: #f0e6d3; border: 1px solid #2a4a6e;" maxlength="2"> <label for="newCardImageUrl" class="text-xs font-600 block mb-2" style="color: #7b9fcc;">Image URL (optional)</label> <input id="newCardImageUrl" type="url" placeholder="https://example.com/image.jpg" class="spelling-input w-full px-2 py-1 rounded text-sm mb-2" style="background: #1a2d4a; color: #f0e6d3; border: 1px solid #2a4a6e;">
+         <div class="text-xs mb-2" style="color: #7b9fcc;">Or upload an image:</div> <input id="newCardImageFile" type="file" accept="image/*" class="spelling-input w-full px-2 py-1 rounded text-sm mb-2" style="background: #1a2d4a; color: #f0e6d3; border: 1px solid #2a4a6e;" onchange="previewImageFile()">
          <div id="imagePreview" class="hidden mt-2 p-2 rounded" style="background: #1a2d4a; border: 1px solid #2a4a6e;"><img id="previewImg" src="" alt="Preview" loading="lazy" style="width: 60px; height: 60px; border-radius: 8px; border: 1px solid #2a4a6e;" onerror="this.style.display='none';"> <button type="button" onclick="clearImageUpload()" class="text-xs mt-1" style="color: #f87171;">Clear preview</button>
          </div>
         </div><select id="newCardCategory" class="spelling-input w-full px-3 py-2 rounded-lg text-sm" style="background: #0f1a2e; color: #f0e6d3; border: 2px solid #2a4a6e;"> <option value="">Select category...</option> <option>Nature</option> <option>People</option> <option>Actions</option> <option>Describing</option> <option>Things</option> <option>Animals</option> <option>Food</option> <option>Greetings</option> </select> <select id="newCardDifficulty" class="spelling-input w-full px-3 py-2 rounded-lg text-sm" style="background: #0f1a2e; color: #f0e6d3; border: 2px solid #2a4a6e;"> <option value="">Select difficulty...</option> <option value="1">🟢 Mudah (Easy)</option> <option value="2">🟡 Sederhana (Medium)</option> <option value="3">🔴 Mencabar (Hard)</option> </select> <input id="newCardExample" type="text" placeholder="Example sentence in Kadazandusun..." class="spelling-input w-full px-3 py-2 rounded-lg text-sm" style="background: #0f1a2e; color: #f0e6d3; border: 2px solid #2a4a6e;"> <input id="newCardExampleMalay" type="text" placeholder="Example in Malay (optional)..." class="spelling-input w-full px-3 py-2 rounded-lg text-sm" style="background: #0f1a2e; color: #f0e6d3; border: 2px solid #2a4a6e;"> <input id="newCardPronunciation" type="text" placeholder="Pronunciation guide (e.g., 'boo-nga')..." class="spelling-input w-full px-3 py-2 rounded-lg text-sm" style="background: #0f1a2e; color: #f0e6d3; border: 2px solid #2a4a6e;"> <button onclick="addCustomCard()" class="w-full px-4 py-2 rounded-lg text-sm font-600 transition-all hover:scale-105" style="background: #e8a44a; color: #0f1a2e;"><i data-lucide="plus" style="width:14px;height:14px;display:inline-block;vertical-align:middle;margin-right:4px;"></i>Add Card</button>
@@ -2694,7 +2782,7 @@
    </main>
    <script>
     // Authentic Kadazandusun vocabulary dictionary - ONLY VERIFIED WORDS
-    const vocabulary = [
+    let vocabulary = [
       { kadazandusun: "Bunga", english: "Flower", malay: "Bunga", emoji: "🌺", category: "Nature", example: "Bunga na maganda.", difficulty: 1, image_url: "" },
       { kadazandusun: "Pohon", english: "Tree", malay: "Pokok", emoji: "🌳", category: "Nature", example: "Pohon na tinggi.", difficulty: 1, image_url: "" },
       { kadazandusun: "Daon", english: "Leaf", malay: "Daun", emoji: "🍃", category: "Nature", example: "Daon na luntian.", difficulty: 1, image_url: "" },
@@ -2873,6 +2961,17 @@
       const ml = document.getElementById('newCardMalay').value.trim();
       const em = document.getElementById('newCardEmoji').value.trim();
       const imgUrl = document.getElementById('newCardImageUrl').value.trim();
+      const imgFile = document.getElementById('newCardImageFile').files[0];
+      let finalImageUrl = imgUrl;
+
+      // Handle file upload
+      if (imgFile) {
+        finalImageUrl = await new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onload = (e) => resolve(e.target.result);
+          reader.readAsDataURL(imgFile);
+        });
+      }
       const cat = document.getElementById('newCardCategory').value;
       const diff = document.getElementById('newCardDifficulty').value;
       const ex = document.getElementById('newCardExample').value.trim();
@@ -2883,7 +2982,7 @@
       if (!kd) { showToast("Kadazandusun word required", "#f87171"); return; }
       if (!en) { showToast("English translation required", "#f87171"); return; }
       if (!ml) { showToast("Malay translation required", "#f87171"); return; }
-      if (!em && !imgUrl) { showToast("Add emoji or image URL", "#f87171"); return; }
+      if (!em && !imgUrl && !imgFile) { showToast("Add emoji, image URL, or upload image", "#f87171"); return; }
       if (!cat) { showToast("Select a category", "#f87171"); return; }
       if (!diff) { showToast("Select difficulty level", "#f87171"); return; }
       if (!ex) { showToast("Example sentence required", "#f87171"); return; }
@@ -2900,36 +2999,17 @@
         const cardData = {
           kadazandusun: kd,
           english: en,
-          emoji: em || "📝",
+          malay: ml,
           category: cat,
-          example: ex,
-          example_malay: exMalay,
-          image_url: imgUrl,
-          pronunciation: pron,
-          player_name: "",
-          correct_answers: 0,
-          wrong_answers: 0,
-          streak: 0,
-          score: 0,
-          completed_at: "",
-          room_code: "",
-          room_join: "",
-          visitor_id: "",
-          visited_at: "",
-          leaderboard_id: "",
-          competition_id: "",
-          competition_name: "",
-          competition_host: "",
-          competition_players: 0,
-          competition_max_players: 0,
-          competition_status: "",
-          competition_created_at: "",
-          announcement_title: "",
-          announcement_content: "",
-          announcement_type: "",
-          announcement_created_at: "",
-          announcement_id: ""
+          difficulty: parseInt(diff),
+          example: ex
         };
+
+        // Add optional fields only if they have values
+        if (em) cardData.emoji = em;
+        if (exMalay) cardData.example_malay = exMalay;
+        if (finalImageUrl) cardData.image_url = finalImageUrl;
+        if (pron) cardData.pronunciation = pron;
 
         console.log("Sending card data:", cardData);
         const result = await window.dataSdk.create(cardData);
@@ -2947,6 +3027,8 @@
           document.getElementById('newCardMalay').value = '';
           document.getElementById('newCardEmoji').value = '';
           document.getElementById('newCardImageUrl').value = '';
+          document.getElementById('newCardImageFile').value = '';
+          clearImageUpload();
           document.getElementById('newCardCategory').value = '';
           document.getElementById('newCardDifficulty').value = '';
           document.getElementById('newCardExample').value = '';
@@ -4444,6 +4526,28 @@
       useImageAsVisual = false;
       document.getElementById('imagePreview').classList.add('hidden');
       document.getElementById('previewImg').src = '';
+      // Clear both URL and file inputs
+      document.getElementById('newCardImageUrl').value = '';
+      document.getElementById('newCardImageFile').value = '';
+    }
+
+    function previewImageFile() {
+      const fileInput = document.getElementById('newCardImageFile');
+      const file = fileInput.files[0];
+      
+      if (file) {
+        // Clear URL input when file is selected
+        document.getElementById('newCardImageUrl').value = '';
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          document.getElementById('previewImg').src = e.target.result;
+          document.getElementById('imagePreview').classList.remove('hidden');
+          selectedImageUrl = e.target.result; // Store base64 data
+          useImageAsVisual = true;
+        };
+        reader.readAsDataURL(file);
+      }
     }
 
     function resetManageView() {
