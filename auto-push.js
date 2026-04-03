@@ -36,7 +36,10 @@ async function syncGit() {
       return;
     }
 
-    log('Changes detected, running git add/commit/push...');
+    log('Changes detected, pulling latest remote branch to avoid non-fast-forward...');
+    await runCommand('git pull --rebase origin main', { cwd: repoDir });
+
+    log('Running git add/commit/push...');
     await runCommand('git add -A', { cwd: repoDir });
     await runCommand('git commit -m "Auto-sync changes from Live Server"', { cwd: repoDir });
     await runCommand('git push origin main', { cwd: repoDir });
