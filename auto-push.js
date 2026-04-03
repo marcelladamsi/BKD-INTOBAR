@@ -1,4 +1,4 @@
-const { watch } = require('fs');
+const chokidar = require('chokidar');
 const { exec } = require('child_process');
 const path = require('path');
 
@@ -46,17 +46,22 @@ async function syncGit() {
   }
 }
 
-watch(repoDir, { recursive: true }, (eventType, filename) => {
-  if (!filename) return;
+const watcher = chokidar.watch(repoDir, {
+  ignored: (filePath) => isIgnored(filePath),
+  persistent: true,
+  ignoreInitial: true,
+  awaitWriteFinish: {
+    stabilityThreshold: 500,
+    pollInterval: 100
+  }
+});
 
-  const fullPath = path.join(repoDir, filename);
-  if (isIgnored(fullPath)) return;
-
-  log('FS event:', eventType, filename);
+watcher.on('all', (event, filePath) => {
+  log('FS event:', event, path.relative(repoDir, filePath));
 
   if (debounceTimer) clearTimeout(debounceTimer);
   debounceTimer = setTimeout(syncGit, debounceMs);
 });
 
-log('Watching', repoDir, 'for file changes.');
+log('Watching', repoDir, 'for file changes with Chokidar.');
 log('Note: Keep this script running while editing, and save files to trigger sync.');
