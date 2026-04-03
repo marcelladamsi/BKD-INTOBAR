@@ -442,18 +442,7 @@
    <script>
     // Authentic Kadazandusun vocabulary dictionary - ONLY VERIFIED WORDS
     let vocabulary = [
-      { kadazandusun: "Bunga", english: "Flower", malay: "Bunga", emoji: "ðŸŒº", category: "Nature", example: "Bunga na maganda.", difficulty: 1, image_url: "" },
-      { kadazandusun: "Pohon", english: "Tree", malay: "Pokok", emoji: "ðŸŒ³", category: "Nature", example: "Pohon na tinggi.", difficulty: 1, image_url: "" },
-      { kadazandusun: "Daon", english: "Leaf", malay: "Daun", emoji: "ðŸƒ", category: "Nature", example: "Daon na luntian.", difficulty: 1, image_url: "" },
-      { kadazandusun: "Langit", english: "Sky", malay: "Langit", emoji: "â˜€ï¸", category: "Nature", example: "Langit na asul.", difficulty: 1, image_url: "" },
-      { kadazandusun: "Tanoh", english: "Earth", malay: "Tanah", emoji: "ðŸŒ", category: "Nature", example: "Tanoh na mulo.", difficulty: 1, image_url: "" },
-      { kadazandusun: "Tubig", english: "Water", malay: "Air", emoji: "ðŸ’§", category: "Nature", example: "Tubig na malinaw.", difficulty: 1, image_url: "" },
-      { kadazandusun: "Api", english: "Fire", malay: "Api", emoji: "ðŸ”¥", category: "Nature", example: "Api na mainit.", difficulty: 2, image_url: "" },
-      { kadazandusun: "Angin", english: "Wind", malay: "Angin", emoji: "ðŸ’¨", category: "Nature", example: "Angin na malamig.", difficulty: 2, image_url: "" },
-      { kadazandusun: "Ulan", english: "Rain", mlay: "Hujan", emoji: "ðŸŒ§ï¸", category: "Nature", example: "Ulan na tumabu.", difficulty: 1, image_url: "" },
-      { kadazandusun: "Araw", english: "Sun", malay: "Matahari", emoji: "â˜€ï¸", category: "Nature", example: "Araw na mamainit.", difficulty: 1, image_url: "" },
-      { kadazandusun: "Buwan", english: "Moon", malay: "Bulan", emoji: "ðŸŒ™", category: "Nature", example: "Buwan sa gabi.", difficulty: 1, image_url: "" },
-      { kadazandusun: "Batu", english: "Stone", malay: "Batu", emoji: "ðŸª¨", category: "Nature", example: "Batu na malaki.", difficulty: 1, image_url: "" }
+
     ];
 
     const categories = ["All", ...new Set(vocabulary.map(v => v.category))];
@@ -1791,11 +1780,11 @@
       document.getElementById('pronTranslation').textContent = card.english;
       document.getElementById('pronFeedback').classList.add('hidden');
       document.getElementById('recognitionStatus').textContent = '';
-      document.getElementById('listenBtn').textContent = 'ðŸŽ¤ Check My Voice';
+      document.getElementById('listenBtn').textContent = Check My Voice';
       document.getElementById('listenBtn').disabled = false;
       document.getElementById('recordTeacherBtn').textContent = teacherVoices[card.kadazandusun] ? 'âœ… Standard Set' : 'ðŸŽ™ï¸ Set Standard';
       document.getElementById('recordTeacherBtn').disabled = false;
-      document.getElementById('playBtn').textContent = 'ðŸ”Š Play Standard';
+      document.getElementById('playBtn').textContent = Play Standard';
       document.getElementById('playBtn').disabled = false;
       document.getElementById('pronCorrect').textContent = pronCorrect;
       document.getElementById('pronWrong').textContent = pronWrong;
@@ -1817,11 +1806,11 @@
       playBtn.disabled = true;
 
       if (teacherVoices[card.kadazandusun]) {
-        playBtn.textContent = 'ðŸ”Š Playing Standard...';
+        playBtn.textContent = ' Playing Standard...';
         const audio = new Audio(teacherVoices[card.kadazandusun]);
         audio.onended = () => {
           playBtn.disabled = false;
-          playBtn.textContent = recordedAudio ? 'ðŸŽ™ï¸ Play My Voice' : 'ðŸ”Š Play Standard';
+          playBtn.textContent = recordedAudio ?  Play My Voice' : 'ðŸ”Š Play Standard';
         };
         audio.onerror = () => {
           playBtn.disabled = false;
@@ -2231,7 +2220,7 @@
         document.getElementById('manageCardsContent').classList.remove('hidden');
         showToast("Admin access granted! ðŸ”“", "#4ade80");
       } else {
-        showToast("Incorrect password! ðŸ”’", "#f87171");
+        showToast("Incorrect password!”’", "#f87171");
         document.getElementById('adminPassword').value = '';
       }
     }
@@ -2340,7 +2329,8 @@
   </div>
  <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9e4b3850f1368117',t:'MTc3NDkxNjc1OS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><!-- live-server-sync-test-v2 -->\n
     <!-- live-server-sync-test-update -->
-</body>
+    <!-- auto-sync-manual-test -->`n</body>
 >>>>>>> 1a29f3c (Initial commit: INTOBAR Kadazandusun language learning app)
 </html>
+
 
